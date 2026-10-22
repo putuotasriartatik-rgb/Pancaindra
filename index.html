@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lab Maya IPAS - Pancaindra | SDN 2 Petulu</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Fredoka for playful children design -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+        body {
+            font-family: 'Fredoka', 'Nunito', sans-serif;
+            background-color: #0f172a;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* Fixed Aspect Ratio Container (16:9) */
+        .app-container {
+            width: 100vw;
+            height: 56.25vw; /* 16:9 ratio */
+            max-height: 100vh;
+            max-width: 177.78vh; /* 16:9 ratio */
+            position: relative;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0fdf4 100%);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .bg-pattern {
+            background-image: radial-gradient(#3b82f6 0.75px, transparent 0.75px), radial-gradient(#3b82f6 0.75px, #e0f2fe 0.75px);
+            background-size: 30px 30px;
+            background-position: 0 0,15px 15px;
+            opacity: 0.15;
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        /* Custom scrollbar replacement for internal containers if needed */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Pulse & Glow Effects */
+        .btn-bounce {
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .btn-bounce:active {
+            transform: scale(0.92);
+        }
+        /* Particle animation */
+        @keyframes floatGas {
+            0% { transform: translateY(0) scale(0.8); opacity: 0.8; }
+            100% { transform: translateY(-80px) scale(1.5); opacity: 0; }
+        }
+        .aroma-particle {
+            position: absolute;
+            animation: floatGas 2s infinite ease-out;
+            pointer-events: none;
+        }
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Application Canvas Wrapper -->
+    <div class="app-container" id="appFrame">
+        <div class="bg-pattern"></div>
+
+        <!-- ==================== SPLASH SCREEN ==================== -->
+        <div id="splashScreen" class="absolute inset-0 z-50 bg-gradient-to-br from-indigo-600 via-sky-500 to-emerald-400 flex flex-col items-center justify-between p-6 text-white text-center">
+            <!-- Decorative Header -->
+            <div class="mt-4 animate-bounce">
+                <span class="inline-block bg-yellow-400 text-amber-900 font-black px-4 py-1 rounded-full text-xs md:text-sm shadow-lg tracking-wider">
+                    <i class="fa-solid font-bold fa-school mr-1"></i> SDN 2 PETULU - FASE B KELAS 3
+                </span>
+            </div>
+
+            <!-- Title Box -->
+            <div class="max-w-xl">
+                <h1 class="text-3xl md:text-5xl font-black drop-shadow-md text-yellow-300 mb-2 tracking-wide">
+                    LAB MAYA IPAS
+                </h1>
+                <h2 class="text-xl md:text-3xl font-extrabold text-white drop-shadow-sm mb-3">
+                    PETUALANGAN PANCAINDRA 👁️👂👃👅✋
+                </h2>
+                <p class="text-xs md:text-base text-sky-100 font-semibold max-w-md mx-auto">
+                    Ayo jelajahi dan pelajari bagaimana 5 indra tubuh kita bekerja secara interaktif dan menyenangkan!
+                </p>
+            </div>
+
+            <!-- Loading & Start Action -->
+            <div class="w-full max-w-sm mb-6 flex flex-col items-center gap-4">
+                <div id="loadingBox" class="w-full">
+                    <div class="flex justify-between text-xs mb-1 font-bold">
+                        <span>Memuat Lab Maya...</span>
+                        <span id="loadProgressText">0%</span>
+                    </div>
+                    <div class="w-full bg-indigo-900/40 rounded-full h-4 p-1 backdrop-blur-sm border border-white/20">
+                        <div id="loadingBar" class="bg-gradient-to-r from-yellow-400 to-emerald-400 h-full rounded-full transition-all duration-300 w-0"></div>
+                    </div>
+                </div>
+
+                <button id="btnStart" onclick="startApp()" class="hidden btn-bounce w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-white font-black text-lg md:text-xl py-3 px-8 rounded-2xl shadow-xl border-b-4 border-orange-700 flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-rocket text-2xl"></i> MULAI EKSPERIMEN!
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== HEADER NAVBAR ==================== -->
+        <header class="relative z-20 bg-white/90 backdrop-blur-md border-b-2 border-sky-200 px-4 py-2 flex items-center justify-between shadow-sm h-14">
+            <!-- Brand & Info -->
+            <div class="flex items-center gap-2">
+                <div class="bg-sky-500 text-white p-2 rounded-xl text-lg flex items-center justify-center w-9 h-9 shadow-md">
+                    <i class="fa-solid fa-microscope"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm md:text-base font-black text-sky-900 leading-none">LAB MAYA PANCAINDRA</h1>
+                    <span class="text-[10px] font-bold text-sky-600">SDN 2 Petulu • Kelas 3 IPAS</span>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex items-center gap-1 md:gap-2">
+                <button onclick="switchTab('teori')" id="tab-teori" class="nav-btn bg-sky-100 text-sky-700 hover:bg-sky-200 font-bold px-2 md:px-3 py-1.5 rounded-xl text-xs md:text-sm flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-book-open"></i> <span class="hidden sm:inline">Teori</span>
+                </button>
+                <button onclick="switchTab('prosedur')" id="tab-prosedur" class="nav-btn bg-sky-100 text-sky-700 hover:bg-sky-200 font-bold px-2 md:px-3 py-1.5 rounded-xl text-xs md:text-sm flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-list-check"></i> <span class="hidden sm:inline">Prosedur</span>
+                </button>
+                <button onclick="switchTab('simulasi')" id="tab-simulasi" class="nav-btn bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black px-3 md:px-4 py-1.5 rounded-xl text-xs md:text-sm flex items-center gap-1.5 shadow-md transition transform scale-105">
+                    <i class="fa-solid fa-flask-vial"></i> <span>Simulasi</span>
+                </button>
+                <button onclick="switchTab('lkpd')" id="tab-lkpd" class="nav-btn bg-sky-100 text-sky-700 hover:bg-sky-200 font-bold px-2 md:px-3 py-1.5 rounded-xl text-xs md:text-sm flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-pen-to-square"></i> <span class="hidden sm:inline">LKPD</span>
+                </button>
+                <button onclick="switchTab('pengembang')" id="tab-pengembang" class="nav-btn bg-sky-100 text-sky-700 hover:bg-sky-200 font-bold px-2 md:px-3 py-1.5 rounded-xl text-xs md:text-sm flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-user-gear"></i> <span class="hidden sm:inline">Info</span>
+                </button>
+            </nav>
+
+            <!-- Quick Action Tools -->
+            <div class="flex items-center gap-1">
+                <button onclick="toggleMute()" id="btnMute" class="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center text-xs font-bold hover:bg-sky-200">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <button onclick="resetCurrentTab()" class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold hover:bg-amber-200" title="Reset Simulasi">
+                    <i class="fa-solid fa-rotate-right"></i>
+                </button>
+                <button onclick="toggleFullscreen()" class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold hover:bg-indigo-200">
+                    <i class="fa-solid fa-expand"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- ==================== MAIN VIEW CONTAINER ==================== -->
+        <main class="relative flex-1 overflow-hidden p-3 md:p-4">
+
+            <!-- TAB 1: TEORI -->
+            <section id="view-teori" class="tab-content hidden h-full flex flex-col gap-3">
+                <div class="flex justify-between items-center bg-white/70 p-2 px-4 rounded-xl border border-sky-100">
+                    <h2 class="text-sm md:text-base font-extrabold text-sky-900 flex items-center gap-2">
+                        <i class="fa-solid fa-brain text-sky-500"></i> Mengenal 5 Pancaindra Manusia
+                    </h2>
+                    <span class="text-xs text-sky-600 font-semibold">Pilih salah satu indra untuk mempelajari selengkapnya</span>
+                </div>
+
+                <div class="grid grid-cols-5 gap-2 h-full pb-2">
+                    <!-- Cards Selectors -->
+                    <button onclick="showTheoryDetail('mata')" class="theory-card bg-white p-2 rounded-2xl border-2 border-sky-200 hover:border-sky-400 flex flex-col items-center justify-center gap-1 shadow-sm transition active:scale-95">
+                        <div class="text-3xl md:text-4xl text-sky-500">👁️</div>
+                        <span class="font-extrabold text-xs md:text-sm text-sky-900">Mata</span>
+                        <span class="text-[10px] bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full font-bold">Penglihatan</span>
+                    </button>
+                    <button onclick="showTheoryDetail('telinga')" class="theory-card bg-white p-2 rounded-2xl border-2 border-emerald-200 hover:border-emerald-400 flex flex-col items-center justify-center gap-1 shadow-sm transition active:scale-95">
+                        <div class="text-3xl md:text-4xl text-emerald-500">👂</div>
+                        <span class="font-extrabold text-xs md:text-sm text-emerald-900">Telinga</span>
+                        <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">Pendengaran</span>
+                    </button>
+                    <button onclick="showTheoryDetail('hidung')" class="theory-card bg-white p-2 rounded-2xl border-2 border-amber-200 hover:border-amber-400 flex flex-col items-center justify-center gap-1 shadow-sm transition active:scale-95">
+                        <div class="text-3xl md:text-4xl text-amber-500">👃</div>
+                        <span class="font-extrabold text-xs md:text-sm text-amber-900">Hidung</span>
+                        <span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">Penciuman</span>
+                    </button>
+                    <button onclick="showTheoryDetail('lidah')" class="theory-card bg-white p-2 rounded-2xl border-2 border-rose-200 hover:border-rose-400 flex flex-col items-center justify-center gap-1 shadow-sm transition active:scale-95">
+                        <div class="text-3xl md:text-4xl text-rose-500">👅</div>
+                        <span class="font-extrabold text-xs md:text-sm text-rose-900">Lidah</span>
+                        <span class="text-[10px] bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-bold">Pengecap</span>
+                    </button>
+                    <button onclick="showTheoryDetail('kulit')" class="theory-card bg-white p-2 rounded-2xl border-2 border-purple-200 hover:border-purple-400 flex flex-col items-center justify-center gap-1 shadow-sm transition active:scale-95">
+                        <div class="text-3xl md:text-4xl text-purple-500">✋</div>
+                        <span class="font-extrabold text-xs md:text-sm text-purple-900">Kulit</span>
+                        <span class="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold">Peraba</span>
+                    </button>
+                </div>
+
+                <!-- Theory Detail Modal/Display Panel -->
+                <div id="theoryDetailBox" class="glass-panel rounded-2xl p-4 flex-1 flex flex-col justify-between overflow-y-auto">
+                    <div class="flex items-start gap-4">
+                        <div id="theoryIcon" class="text-5xl bg-white p-3 rounded-2xl shadow-md border">👁️</div>
+                        <div class="flex-1">
+                            <h3 id="theoryTitle" class="text-lg md:text-xl font-black text-sky-900">Mata (Indra Penglihatan)</h3>
+                            <p id="theoryDesc" class="text-xs md:text-sm text-slate-700 mt-1 leading-relaxed">
+                                Mata berfungsi untuk melihat benda, warna, dan keadaan di sekitar kita. Cahaya masuk melalui pupil dan diterima oleh retina untuk dikirim ke otak.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mt-2">
+                        <div class="bg-blue-50/80 p-2.5 rounded-xl border border-blue-200">
+                            <h4 class="font-bold text-xs text-blue-900 flex items-center gap-1">
+                                <i class="fa-solid fa-puzzle-piece"></i> Bagian Utama:
+                            </h4>
+                            <p id="theoryParts" class="text-[11px] text-blue-800 mt-0.5">Pupil, Kornea, Lensa Mata, Retina.</p>
+                        </div>
+                        <div class="bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200">
+                            <h4 class="font-bold text-xs text-emerald-900 flex items-center gap-1">
+                                <i class="fa-solid fa-heart-pulse"></i> Cara Merawat:
+                            </h4>
+                            <p id="theoryCare" class="text-[11px] text-emerald-800 mt-0.5">Jangan membaca di tempat gelap, makan wortel/sayur, istirahatkan mata.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: PROSEDUR -->
+            <section id="view-prosedur" class="tab-content hidden h-full flex flex-col gap-3">
+                <div class="bg-white/70 p-2 px-4 rounded-xl border border-sky-100">
+                    <h2 class="text-sm md:text-base font-extrabold text-sky-900 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-list text-sky-500"></i> Petunjuk Eksperimen Praktikum
+                    </h2>
+                </div>
+
+                <div class="grid grid-cols-4 gap-3 flex-1">
+                    <div class="bg-white p-3 rounded-2xl border-2 border-sky-200 flex flex-col items-center text-center justify-center gap-2 shadow-sm">
+                        <div class="w-10 h-10 rounded-full bg-sky-500 text-white font-black text-lg flex items-center justify-center">1</div>
+                        <i class="fa-solid fa-hand-pointer text-3xl text-sky-500 my-1"></i>
+                        <h3 class="font-bold text-xs text-sky-900">Pilih Sub-Indra</h3>
+                        <p class="text-[10px] text-slate-600">Klik tombol sub-indra (Lidah, Telinga, Mata, Hidung, atau Kulit) pada menu Simulasi.</p>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-2xl border-2 border-emerald-200 flex flex-col items-center text-center justify-center gap-2 shadow-sm">
+                        <div class="w-10 h-10 rounded-full bg-emerald-500 text-white font-black text-lg flex items-center justify-center">2</div>
+                        <i class="fa-solid fa-sliders text-3xl text-emerald-500 my-1"></i>
+                        <h3 class="font-bold text-xs text-emerald-900">Uji Alat & Benda</h3>
+                        <p class="text-[10px] text-slate-600">Geser slider, klik tombol sampel makanan, atau ubah tingkat intensitas objek.</p>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-2xl border-2 border-amber-200 flex flex-col items-center text-center justify-center gap-2 shadow-sm">
+                        <div class="w-10 h-10 rounded-full bg-amber-500 text-white font-black text-lg flex items-center justify-center">3</div>
+                        <i class="fa-solid fa-face-smile text-3xl text-amber-500 my-1"></i>
+                        <h3 class="font-bold text-xs text-amber-900">Amati Reaksi</h3>
+                        <p class="text-[10px] text-slate-600">Perhatikan reaksi karakter, suara yang dihasilkan, dan perubahan pupil/kulit.</p>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-2xl border-2 border-purple-200 flex flex-col items-center text-center justify-center gap-2 shadow-sm">
+                        <div class="w-10 h-10 rounded-full bg-purple-500 text-white font-black text-lg flex items-center justify-center">4</div>
+                        <i class="fa-solid fa-square-check text-3xl text-purple-500 my-1"></i>
+                        <h3 class="font-bold text-xs text-purple-900">Catat di LKPD</h3>
+                        <p class="text-[10px] text-slate-600">Selesaikan kuis evaluasi pada Tab LKPD untuk menguji pemahamanmu!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: SIMULASI (FITUR UTAMA) -->
+            <section id="view-simulasi" class="tab-content h-full flex flex-col gap-2">
+                <!-- Sub Navigation Bar for Senses -->
+                <div class="flex items-center justify-between bg-white/80 backdrop-blur p-1.5 rounded-xl border border-sky-200 shadow-sm">
+                    <span class="text-xs font-black text-sky-900 ml-2 hidden sm:inline">PILIH EKSPERIMEN:</span>
+                    <div class="flex items-center gap-1 w-full sm:w-auto justify-around">
+                        <button onclick="setSimSense('lidah')" id="btnSense-lidah" class="sense-tab-btn bg-rose-500 text-white font-bold px-3 py-1 rounded-lg text-xs flex items-center gap-1 transition">
+                            👅 Lidah
+                        </button>
+                        <button onclick="setSimSense('telinga')" id="btnSense-telinga" class="sense-tab-btn bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-lg text-xs flex items-center gap-1 transition">
+                            👂 Telinga
+                        </button>
+                        <button onclick="setSimSense('mata')" id="btnSense-mata" class="sense-tab-btn bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-lg text-xs flex items-center gap-1 transition">
+                            👁️ Mata
+                        </button>
+                        <button onclick="setSimSense('hidung')" id="btnSense-hidung" class="sense-tab-btn bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-lg text-xs flex items-center gap-1 transition">
+                            👃 Hidung
+                        </button>
+                        <button onclick="setSimSense('kulit')" id="btnSense-kulit" class="sense-tab-btn bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-lg text-xs flex items-center gap-1 transition">
+                            ✋ Kulit
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SIMULASI CANVAS CONTAINER -->
+                <div class="relative flex-1 glass-panel rounded-2xl p-3 overflow-hidden flex flex-col justify-between">
+
+                    <!-- ================= SIM 1: LIDAH ================= -->
+                    <div id="simArea-lidah" class="sim-panel h-full flex flex-col justify-between">
+                        <div class="text-center">
+                            <h3 class="text-xs md:text-sm font-black text-rose-900">EKSPERIMEN PENGECAP (LIDAH)</h3>
+                            <p class="text-[11px] text-slate-600">Pilih makanan di bawah untuk memberi rasa pada lidah karakter!</p>
+                        </div>
+
+                        <!-- Interactive Visual Area -->
+                        <div class="flex items-center justify-around flex-1 relative my-1">
+                            <!-- Tongue & Character Face -->
+                            <div class="flex flex-col items-center">
+                                <div id="charFace" class="text-6xl md:text-7xl transition-transform duration-300 transform">😋</div>
+                                <div id="tongueZone" class="relative mt-2 w-32 h-24 bg-rose-400 rounded-b-full border-4 border-rose-500 shadow-inner flex flex-col items-center justify-between p-2">
+                                    <span class="text-[9px] font-bold text-white bg-rose-600/60 px-1 rounded">Pahit (Pangkal)</span>
+                                    <div class="flex justify-between w-full text-[9px] font-bold text-white px-1">
+                                        <span>Asam</span>
+                                        <span>Asin</span>
+                                    </div>
+                                    <span class="text-[9px] font-bold text-white bg-rose-600/60 px-1 rounded">Manis (Ujung)</span>
+                                </div>
+                            </div>
+
+                            <!-- Reaction Info Box -->
+                            <div class="bg-white/90 p-3 rounded-2xl border-2 border-rose-200 w-48 text-center shadow-md">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Hasil Rasa</span>
+                                <div id="tasteResultName" class="text-lg font-black text-rose-600 my-1">- Belum Diberi Makanan -</div>
+                                <p id="tasteResultZone" class="text-[11px] text-slate-600">Klik salah satu sampel makanan di bawah.</p>
+                            </div>
+                        </div>
+
+                        <!-- Foods Selection -->
+                        <div class="grid grid-cols-5 gap-2">
+                            <button onclick="testTongue('Gula', 'Manis', '😋', 'Ujung Lidah', 523.25)" class="btn-bounce bg-white p-2 rounded-xl border-2 border-amber-300 flex flex-col items-center shadow-sm">
+                                <span class="text-2xl">🍬</span>
+                                <span class="text-xs font-bold text-slate-800">Gula</span>
+                                <span class="text-[9px] font-semibold text-amber-600">Manis</span>
+                            </button>
+                            <button onclick="testTongue('Garam', 'Asin', '😐', 'Tepi Depan', 440)" class="btn-bounce bg-white p-2 rounded-xl border-2 border-blue-300 flex flex-col items-center shadow-sm">
+                                <span class="text-2xl">🧂</span>
+                                <span class="text-xs font-bold text-slate-800">Garam</span>
+                                <span class="text-[9px] font-semibold text-blue-600">Asin</span>
+                            </button>
+                            <button onclick="testTongue('Lemon', 'Asam', '😖', 'Tepi Belakang', 659.25)" class="btn-bounce bg-white p-2 rounded-xl border-2 border-yellow-300 flex flex-col items-center shadow-sm">
+                                <span class="text-2xl">🍋</span>
+                                <span class="text-xs font-bold text-slate-800">Lemon</span>
+                                <span class="text-[9px] font-semibold text-yellow-600">Asam</span>
+                            </button>
+                            <button onclick="testTongue('Kopi Hitam', 'Pahit', '😫', 'Pangkal Lidah', 261.63)" class="btn-bounce bg-white p-2 rounded-xl border-2 border-amber-800 flex flex-col items-center shadow-sm">
+                                <span class="text-2xl">☕</span>
+                                <span class="text-xs font-bold text-slate-800">Kopi</span>
+                                <span class="text-[9px] font-semibold text-amber-900">Pahit</span>
+                            </button>
+                            <button onclick="testTongue('Cabai', 'Pedas (Sensasi Panas)', '🥵', 'Seluruh Permukaan', 880)" class="btn-bounce bg-white p-2 rounded-xl border-2 border-red-500 flex flex-col items-center shadow-sm">
+                                <span class="text-2xl">🌶️</span>
+                                <span class="text-xs font-bold text-slate-800">Cabai</span>
+                                <span class="text-[9px] font-semibold text-red-600">Pedas</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ================= SIM 2: TELINGA ================= -->
+                    <div id="simArea-telinga" class="sim-panel hidden h-full flex flex-col justify-between">
+                        <div class="text-center">
+                            <h3 class="text-xs md:text-sm font-black text-emerald-900">EKSPERIMEN PENDENGARAN (TELINGA)</h3>
+                            <p class="text-[11px] text-slate-600">Mainkan frekuensi nada atau tebak suara hewan/alat musik!</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 flex-1 my-2">
+                            <!-- Pitch Generator -->
+                            <div class="bg-white/80 p-3 rounded-2xl border-2 border-emerald-200 flex flex-col justify-between">
+                                <h4 class="text-xs font-bold text-emerald-900"><i class="fa-solid fa-wave-square"></i> Tes Frekuensi Suara</h4>
+                                <div class="flex items-center gap-3">
+                                    <input type="range" id="freqSlider" min="200" max="1200" value="440" oninput="updateFreq(this.value)" class="w-full accent-emerald-500 cursor-pointer">
+                                    <span id="freqVal" class="text-xs font-black text-emerald-700 w-16">440 Hz</span>
+                                </div>
+                                <button onclick="playFreqTone()" class="btn-bounce bg-emerald-500 text-white font-bold py-1.5 px-3 rounded-xl text-xs flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-play"></i> Bunyikan Frekuensi
+                                </button>
+                            </div>
+
+                            <!-- Guess Sound Game -->
+                            <div class="bg-white/80 p-3 rounded-2xl border-2 border-teal-200 flex flex-col justify-between">
+                                <h4 class="text-xs font-bold text-teal-900"><i class="fa-solid fa-circle-question"></i> Tebak Suara</h4>
+                                <div class="flex items-center justify-between">
+                                    <button onclick="playMysterySound()" class="btn-bounce bg-teal-500 text-white font-bold py-2 px-3 rounded-xl text-xs flex items-center gap-1">
+                                        <i class="fa-solid fa-volume-high"></i> Putar Suara Rahasia
+                                    </button>
+                                    <span id="soundGuessFeedback" class="text-[11px] font-bold text-slate-500">Dengarkan dulu...</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-1">
+                                    <button onclick="checkSoundGuess('Kucing')" class="bg-teal-50 text-teal-800 font-bold p-1 rounded text-xs border border-teal-200 hover:bg-teal-100">🐱 Kucing</button>
+                                    <button onclick="checkSoundGuess('Burung')" class="bg-teal-50 text-teal-800 font-bold p-1 rounded text-xs border border-teal-200 hover:bg-teal-100">🐦 Burung</button>
+                                    <button onclick="checkSoundGuess('Sirene')" class="bg-teal-50 text-teal-800 font-bold p-1 rounded text-xs border border-teal-200 hover:bg-teal-100">🚨 Sirene</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= SIM 3: MATA ================= -->
+                    <div id="simArea-mata" class="sim-panel hidden h-full flex flex-col justify-between">
+                        <div class="text-center">
+                            <h3 class="text-xs md:text-sm font-black text-sky-900">EKSPERIMEN PENGLIHATAN (MATA)</h3>
+                            <p class="text-[11px] text-slate-600">Geser intensitas cahaya untuk melihat perubahan ukuran pupil mata!</p>
+                        </div>
+
+                        <!-- Eye Graphic Box -->
+                        <div class="flex-1 flex items-center justify-around my-2">
+                            <!-- Visual Eye -->
+                            <div id="lightRoom" class="relative w-48 h-32 rounded-3xl bg-yellow-100 border-4 border-sky-300 flex items-center justify-center transition-colors duration-500">
+                                <div class="w-32 h-16 bg-white rounded-full border-2 border-slate-700 flex items-center justify-center relative overflow-hidden shadow-inner">
+                                    <!-- Iris -->
+                                    <div class="w-12 h-12 rounded-full bg-sky-500 flex items-center justify-center">
+                                        <!-- Pupil -->
+                                        <div id="pupil" class="w-6 h-6 rounded-full bg-slate-950 transition-all duration-300"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white/90 p-3 rounded-2xl border-2 border-sky-200 w-52 text-center">
+                                <span class="text-xs font-bold text-sky-900 block">Kondisi Pupil</span>
+                                <div id="pupilStatusText" class="text-sm font-black text-sky-600 my-1">Ukuran Normal</div>
+                                <p id="pupilDesc" class="text-[10px] text-slate-600">Cahaya sedang, pupil berukuran normal.</p>
+                            </div>
+                        </div>
+
+                        <!-- Light Control Slider -->
+                        <div class="bg-white/80 p-2.5 rounded-xl border border-sky-200 flex items-center gap-3">
+                            <i class="fa-solid fa-moon text-slate-600"></i>
+                            <input type="range" id="lightSlider" min="10" max="100" value="50" oninput="updateLightSim(this.value)" class="w-full accent-sky-500 cursor-pointer">
+                            <i class="fa-solid fa-sun text-amber-500"></i>
+                        </div>
+                    </div>
+
+                    <!-- ================= SIM 4: HIDUNG ================= -->
+                    <div id="simArea-hidung" class="sim-panel hidden h-full flex flex-col justify-between">
+                        <div class="text-center">
+                            <h3 class="text-xs md:text-sm font-black text-amber-900">EKSPERIMEN PENCIUMAN (HIDUNG)</h3>
+                            <p class="text-[11px] text-slate-600">Pilih objek aromatik untuk melihat reaksi hidung manusia!</p>
+                        </div>
+
+                        <div class="flex-1 relative flex items-center justify-center gap-8 my-2">
+                            <!-- Particle Visual Box -->
+                            <div id="aromaBox" class="relative w-40 h-32 bg-amber-50/50 rounded-2xl border-2 border-dashed border-amber-300 flex items-center justify-center overflow-hidden">
+                                <div id="aromaObjIcon" class="text-5xl">🌸</div>
+                                <div id="particleContainer"></div>
+                            </div>
+
+                            <!-- Nose & Expression -->
+                            <div class="flex flex-col items-center">
+                                <div id="noseFace" class="text-6xl">😊</div>
+                                <div id="aromaFeedback" class="mt-2 bg-white px-3 py-1 rounded-xl text-xs font-bold text-amber-900 shadow-sm border border-amber-200">
+                                    Aroma Harum Bunga
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Smell Options -->
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="testSmell('🌸', 'Harum Bunga', 'Harum', '😊', '#ec4899')" class="btn-bounce bg-white p-2 rounded-xl border-2 border-pink-300 flex flex-col items-center">
+                                <span class="text-2xl">🌸</span>
+                                <span class="text-xs font-bold text-slate-800">Bunga</span>
+                                <span class="text-[9px] text-pink-600 font-bold">Harum</span>
+                            </button>
+                            <button onclick="testSmell('Perfume', 'Parfum Wangi', 'Harum', '😍', '#3b82f6')" class="btn-bounce bg-white p-2 rounded-xl border-2 border-blue-300 flex flex-col items-center">
+                                <span class="text-2xl">🧴</span>
+                                <span class="text-xs font-bold text-slate-800">Parfum</span>
+                                <span class="text-[9px] text-blue-600 font-bold">Wangi</span>
+                            </button>
+                            <button onclick="testSmell('🗑️', 'Sampah Busuk', 'Bau Busuk', '🤢', '#84cc16')" class="btn-bounce bg-white p-2 rounded-xl border-2 border-lime-300 flex flex-col items-center">
+                                <span class="text-2xl">🗑️</span>
+                                <span class="text-xs font-bold text-slate-800">Sampah</span>
+                                <span class="text-[9px] text-lime-700 font-bold">Bau Busuk</span>
+                            </button>
+                            <button onclick="testSmell('🧦', 'Kaos Kaki Apek', 'Bau Menyengat', '🤮', '#78350f')" class="btn-bounce bg-white p-2 rounded-xl border-2 border-amber-800 flex flex-col items-center">
+                                <span class="text-2xl">🧦</span>
+                                <span class="text-xs font-bold text-slate-800">Kaos Kaki</span>
+                                <span class="text-[9px] text-amber-900 font-bold">Apek</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ================= SIM 5: KULIT ================= -->
+                    <div id="simArea-kulit" class="sim-panel hidden h-full flex flex-col justify-between">
+                        <div class="text-center">
+                            <h3 class="text-xs md:text-sm font-black text-purple-900">EKSPERIMEN PERABA (KULIT)</h3>
+                            <p class="text-[11px] text-slate-600">Sentuh benda-benda untuk merasakan tekstur dan suhu!</p>
+                        </div>
+
+                        <div class="flex-1 flex items-center justify-around my-2">
+                            <!-- Hand Touch Graphic -->
+                            <div class="flex flex-col items-center">
+                                <div id="touchHand" class="text-6xl transition-transform duration-200">✋</div>
+                                <span class="text-[10px] font-bold text-purple-700 mt-1">Reseptor Kulit</span>
+                            </div>
+
+                            <!-- Skin Info Screen -->
+                            <div class="bg-white/90 p-3 rounded-2xl border-2 border-purple-200 w-56 text-center shadow-md">
+                                <div id="skinResultIcon" class="text-3xl mb-1">🧊</div>
+                                <h4 id="skinResultTitle" class="text-sm font-black text-purple-900">Es Batu</h4>
+                                <div class="flex justify-center gap-2 mt-1">
+                                    <span id="skinTextureTag" class="text-[10px] bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded-full">Licin</span>
+                                    <span id="skinTempTag" class="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">Dingin</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Object Touch Buttons -->
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="testSkin('🧊', 'Es Batu', 'Licin', 'Sangat Dingin ❄️', 600)" class="btn-bounce bg-white p-2 rounded-xl border-2 border-blue-300 flex flex-col items-center">
+                                <span class="text-2xl">🧊</span>
+                                <span class="text-xs font-bold text-slate-800">Es Batu</span>
+                            </button>
+                            <button onclick="testSkin('🪨', 'Batu Batu', 'Kasar & Keras', 'Normal 🌡️', 300)" class="btn-bounce bg-white p-2 rounded-xl border-2 border-stone-400 flex flex-col items-center">
+                                <span class="text-2xl">🪨</span>
+                                <span class="text-xs font-bold text-slate-800">Batu</span>
+                            </button>
+                            <button onclick="testSkin('🧸', 'Boneka Bulu', 'Sangat Halus & Lembut', 'Hangat 🧶', 500)" class="btn-bounce bg-white p-2 rounded-xl border-2 border-pink-300 flex flex-col items-center">
+                                <span class="text-2xl">🧸</span>
+                                <span class="text-xs font-bold text-slate-800">Boneka</span>
+                            </button>
+                            <button onclick="testSkin('☕', 'Cangkir Teh Panas', 'Halus', 'Panas 🔥', 750)" class="btn-bounce bg-white p-2 rounded-xl border-2 border-red-400 flex flex-col items-center">
+                                <span class="text-2xl">☕</span>
+                                <span class="text-xs font-bold text-slate-800">Teh Panas</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- TAB 4: LKPD & EVALUASI -->
+            <section id="view-lkpd" class="tab-content hidden h-full flex flex-col gap-2">
+                <div class="flex justify-between items-center bg-white/70 p-2 px-4 rounded-xl border border-sky-100">
+                    <h2 class="text-sm md:text-base font-extrabold text-sky-900 flex items-center gap-2">
+                        <i class="fa-solid fa-file-pen text-sky-500"></i> Lembar Kerja & Evaluasi Interaktif
+                    </h2>
+                    <span id="quizScoreBadge" class="text-xs font-black bg-amber-400 text-amber-950 px-3 py-1 rounded-full shadow-sm">Skor: 0 / 100</span>
+                </div>
+
+                <div class="glass-panel rounded-2xl p-4 flex-1 flex flex-col justify-between overflow-y-auto">
+                    <!-- Question Box -->
+                    <div id="quizBox">
+                        <div class="flex items-center gap-2 text-xs font-bold text-sky-600 mb-1">
+                            <span id="qNum">Soal 1 dari 4</span>
+                        </div>
+                        <h3 id="qText" class="text-sm md:text-base font-black text-slate-800 mb-3">
+                            Bagian lidah manakah yang paling peka untuk merasakan rasa manis seperti gula?
+                        </h3>
+
+                        <!-- Options -->
+                        <div id="qOptions" class="grid grid-cols-2 gap-2">
+                            <!-- Option buttons injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Quiz Result Summary Screen (Hidden by default) -->
+                    <div id="quizResultBox" class="hidden text-center flex-1 flex flex-col items-center justify-center gap-2">
+                        <div class="text-5xl animate-bounce">🏆</div>
+                        <h3 class="text-xl font-black text-sky-900">HEBAT! KAMU SELESAI!</h3>
+                        <p id="quizFinalScoreText" class="text-sm font-bold text-slate-700">Skor Akhir Kamu: 100</p>
+                        <button onclick="resetQuiz()" class="btn-bounce bg-emerald-500 text-white font-black px-6 py-2 rounded-xl text-xs mt-2 shadow-lg">
+                            <i class="fa-solid fa-rotate-left"></i> Ulangi Kuis
+                        </button>
+                    </div>
+
+                    <!-- Next Question Control -->
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-200">
+                        <span id="quizFeedback" class="text-xs font-bold text-slate-500">Pilih salah satu jawaban!</span>
+                        <button id="btnNextQuiz" onclick="nextQuestion()" class="hidden bg-sky-500 text-white font-bold px-4 py-1.5 rounded-xl text-xs">
+                            Lanjut <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: PENGEMBANG -->
+            <section id="view-pengembang" class="tab-content hidden h-full flex flex-col gap-3">
+                <div class="glass-panel rounded-2xl p-4 h-full flex flex-col justify-between">
+                    <div class="flex items-center gap-4 border-b border-sky-200 pb-3">
+                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-400 to-emerald-400 flex items-center justify-center text-3xl text-white shadow-md">
+                            👨‍🏫
+                        </div>
+                        <div>
+                            <h2 class="text-base md:text-lg font-black text-sky-900">PROFIL PENGEMBANG LAB MAYA</h2>
+                            <p class="text-xs font-bold text-sky-600">Guru Kelas 3 • SDN 2 Petulu</p>
+                            <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">IPAS Fase B Interaktif</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 my-2 text-xs">
+                        <div class="bg-white/80 p-3 rounded-xl border border-sky-100">
+                            <h4 class="font-black text-sky-900 mb-1"><i class="fa-solid fa-bullseye text-sky-500"></i> Tujuan Pembelajaran</h4>
+                            <p class="text-[11px] text-slate-600 leading-relaxed">
+                                Membantu siswa kelas 3 SD memahami fungsi, bagian-bagian, dan cara kerja pancaindra secara visual dan interaktif.
+                            </p>
+                        </div>
+                        <div class="bg-white/80 p-3 rounded-xl border border-sky-100">
+                            <h4 class="font-black text-sky-900 mb-1"><i class="fa-solid fa-laptop-code text-sky-500"></i> Spesifikasi Teknis</h4>
+                            <p class="text-[11px] text-slate-600 leading-relaxed">
+                                Standalone Full Offline (Web Audio Synth built-in), Responsive Design 16:9, Tanpa Scrolling untuk HP & Tablet.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-sky-50 p-2.5 rounded-xl border border-sky-200 text-center">
+                        <p class="text-[11px] text-sky-900 font-bold">
+                            "Mendidik anak bangsa melalui teknologi interaktif yang menyenangkan!" 🚀
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        /* --------------------------------------------------
+         * WEB AUDIO SYNTHESIZER (100% Offline Audio Engine)
+         * -------------------------------------------------- */
+        let audioCtx = null;
+        let isMuted = false;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type, freq = 440, duration = 0.15) {
+            if (isMuted) return;
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.05);
+                } else if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.08); // E5
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(150, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.2);
+                } else if (type === 'tone') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + duration);
+                }
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const btn = document.getElementById('btnMute');
+            btn.innerHTML = isMuted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+            btn.classList.toggle('text-red-500', isMuted);
+        }
+
+        /* --------------------------------------------------
+         * SPLASH SCREEN & LOADING LOGIC
+         * -------------------------------------------------- */
+        window.addEventListener('load', () => {
+            let progress = 0;
+            const bar = document.getElementById('loadingBar');
+            const text = document.getElementById('loadProgressText');
+            const interval = setInterval(() => {
+                progress += 15;
+                if (progress > 100) progress = 100;
+                bar.style.width = progress + '%';
+                text.innerText = progress + '%';
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    document.getElementById('loadingBox').classList.add('hidden');
+                    document.getElementById('btnStart').classList.remove('hidden');
+                }
+            }, 100);
+        });
+
+        function startApp() {
+            initAudio();
+            playSound('correct');
+            document.getElementById('splashScreen').classList.add('hidden');
+        }
+
+        /* --------------------------------------------------
+         * TAB NAVIGATION LOGIC
+         * -------------------------------------------------- */
+        function switchTab(tabId) {
+            playSound('click');
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            // Remove active style from nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn bg-sky-100 text-sky-700 hover:bg-sky-200 font-bold px-2 md:px-3 py-1.5 rounded-xl text-xs md:text-sm flex items-center gap-1.5 transition";
+            });
+
+            // Show current view
+            document.getElementById('view-' + tabId).classList.remove('hidden');
+            // Highlight current button
+            const activeBtn = document.getElementById('tab-' + tabId);
+            activeBtn.className = "nav-btn bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black px-3 md:px-4 py-1.5 rounded-xl text-xs md:text-sm flex items-center gap-1.5 shadow-md transition transform scale-105";
+        }
+
+        function resetCurrentTab() {
+            playSound('click');
+            // Reset simulation states
+            setSimSense('lidah');
+            resetQuiz();
+        }
+
+        /* --------------------------------------------------
+         * TAB 1: TEORI DATA & LOGIC
+         * -------------------------------------------------- */
+        const theoryData = {
+            mata: {
+                icon: '👁️',
+                title: 'Mata (Indra Penglihatan)',
+                desc: 'Mata membantu kita melihat indahnya warna, bentuk, dan ukuran benda di sekitar kita. Cahaya ditangkap oleh retina dan diteruskan ke otak.',
+                parts: 'Pupil, Kornea, Lensa Mata, Retina, Otot Mata.',
+                care: 'Jangan membaca sambil tiduran atau di tempat gelap. Istirahatkan mata dari layar HP.'
+            },
+            telinga: {
+                icon: '👂',
+                title: 'Telinga (Indra Pendengaran)',
+                desc: 'Telinga menangkap getaran suara dari udara sehingga kita bisa mendengar musik, percakapan, dan suara alam.',
+                parts: 'Daun Telinga, Saluran Telinga, Gendang Telinga, Rumah Siput (Koklea).',
+                care: 'Jangan mendengarkan musik terlalu keras dan hindari membersihkan telinga dengan benda tajam.'
+            },
+            hidung: {
+                icon: '👃',
+                title: 'Hidung (Indra Penciuman)',
+                desc: 'Hidung mendeteksi bau atau aroma gas di udara melalui sel reseptor penciuman dan membantu kita bernapas.',
+                parts: 'Lubang Hidung, Rongga Hidung, Saraf Penciuman (Olfactori).',
+                care: 'Selalu menjaga kebersihan hidung dan gunakan masker jika berada di area berdebu/berasap.'
+            },
+            lidah: {
+                icon: '👅',
+                title: 'Lidah (Indra Pengecap)',
+                desc: 'Permukaan lidah memiliki bintik-bintik (papila) yang bisa mengenali 4 rasa utama: manis, asin, asam, dan pahit.',
+                parts: 'Papila, Tunas Pengecap, Saraf Pengecap.',
+                care: 'Sikat lidah secara perlahan saat menggosok gigi dan hindari makanan yang terlalu panas/pedas.'
+            },
+            kulit: {
+                icon: '✋',
+                title: 'Kulit (Indra Peraba)',
+                desc: 'Kulit adalah organ terluas yang bisa merespons sentuhan, tekstur (halus/kasar), serta suhu (panas/dingin).',
+                parts: 'Epidermis (Kulit Luar), Dermis (Kulit Dalam), Ujung Saraf Peraba.',
+                care: 'Mandi 2 kali sehari dengan sabun dan gunakan pelembab agar kulit tidak kering.'
+            }
+        };
+
+        function showTheoryDetail(key) {
+            playSound('click');
+            const data = theoryData[key];
+            document.getElementById('theoryIcon').innerText = data.icon;
+            document.getElementById('theoryTitle').innerText = data.title;
+            document.getElementById('theoryDesc').innerText = data.desc;
+            document.getElementById('theoryParts').innerText = data.parts;
+            document.getElementById('theoryCare').innerText = data.care;
+        }
+
+        /* --------------------------------------------------
+         * TAB 3: SIMULASI LOGIC
+         * -------------------------------------------------- */
+        function setSimSense(senseKey) {
+            playSound('click');
+            // Hide all sim panels
+            document.querySelectorAll('.sim-panel').forEach(p => p.classList.add('hidden'));
+            // Reset button styles
+            document.querySelectorAll('.sense-tab-btn').forEach(b => {
+                b.className = "sense-tab-btn bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-lg text-xs flex items-center gap-1 transition";
+            });
+
+            // Show chosen panel
+            document.getElementById('simArea-' + senseKey).classList.remove('hidden');
+            // Highlight button
+            const btn = document.getElementById('btnSense-' + senseKey);
+            btn.className = "sense-tab-btn bg-rose-500 text-white font-bold px-3 py-1 rounded-lg text-xs flex items-center gap-1 transition";
+        }
+
+        // SIM 1: LIDAH
+        function testTongue(food, taste, face, zone, pitch) {
+            playSound('tone', pitch, 0.2);
+            document.getElementById('charFace').innerText = face;
+            document.getElementById('tasteResultName').innerText = food + " (" + taste + ")";
+            document.getElementById('tasteResultZone').innerText = "Dideteksi terutama pada: " + zone;
+        }
+
+        // SIM 2: TELINGA
+        let currentFreq = 440;
+        let currentMysterySound = '';
+
+        function updateFreq(val) {
+            currentFreq = val;
+            document.getElementById('freqVal').innerText = val + ' Hz';
+        }
+
+        function playFreqTone() {
+            playSound('tone', currentFreq, 0.4);
+        }
+
+        function playMysterySound() {
+            const sounds = ['Kucing', 'Burung', 'Sirene'];
+            currentMysterySound = sounds[Math.floor(Math.random() * sounds.length)];
+            
+            if (currentMysterySound === 'Kucing') {
+                playSound('tone', 700, 0.1);
+                setTimeout(() => playSound('tone', 500, 0.2), 100);
+            } else if (currentMysterySound === 'Burung') {
+                playSound('tone', 1000, 0.05);
+                setTimeout(() => playSound('tone', 1200, 0.05), 60);
+                setTimeout(() => playSound('tone', 1500, 0.08), 120);
+            } else {
+                playSound('tone', 800, 0.15);
+                setTimeout(() => playSound('tone', 400, 0.15), 150);
+            }
+
+            document.getElementById('soundGuessFeedback').innerText = "Suara diputar! Tebak hewan/benda apa?";
+            document.getElementById('soundGuessFeedback').className = "text-[11px] font-bold text-amber-600 animate-pulse";
+        }
+
+        function checkSoundGuess(guess) {
+            if (!currentMysterySound) {
+                alert("Putar suara rahasia terlebih dahulu!");
+                return;
+            }
+            if (guess === currentMysterySound) {
+                playSound('correct');
+                document.getElementById('soundGuessFeedback').innerText = "BENAR! Itu suara " + guess + " 🎉";
+                document.getElementById('soundGuessFeedback').className = "text-[11px] font-bold text-emerald-600";
+            } else {
+                playSound('wrong');
+                document.getElementById('soundGuessFeedback').innerText = "Salah, coba dengarkan lagi!";
+                document.getElementById('soundGuessFeedback').className = "text-[11px] font-bold text-rose-600";
+            }
+        }
+
+        // SIM 3: MATA
+        function updateLightSim(val) {
+            const pupil = document.getElementById('pupil');
+            const room = document.getElementById('lightRoom');
+            const status = document.getElementById('pupilStatusText');
+            const desc = document.getElementById('pupilDesc');
+
+            // Size inversely proportional to light
+            const size = 32 - (val * 0.24); // Size in px
+            pupil.style.width = size + 'px';
+            pupil.style.height = size + 'px';
+
+            // Background darkness
+            const bgLum = val;
+            room.style.backgroundColor = `hsl(45, 100%, ${bgLum}%)`;
+
+            if (val < 35) {
+                status.innerText = "Pupil MEMBESAR (Melihat dalam Gelap)";
+                desc.innerText = "Pupil melebar agar lebih banyak cahaya masuk ke mata saat ruangan redup.";
+            } else if (val > 70) {
+                status.innerText = "Pupil MENGECIL (Terlalu Terang)";
+                desc.innerText = "Pupil mengecil untuk melindungi mata dari silau cahaya berlebih.";
+            } else {
+                status.innerText = "Pupil Ukuran Normal";
+                desc.innerText = "Cahaya sedang dan nyaman untuk mata.";
+            }
+        }
+
+        // SIM 4: HIDUNG
+        function testSmell(icon, name, type, face, color) {
+            playSound('click');
+            document.getElementById('aromaObjIcon').innerText = icon;
+            document.getElementById('noseFace').innerText = face;
+            document.getElementById('aromaFeedback').innerText = name + " - " + type;
+
+            // Spawn particle effect
+            const container = document.getElementById('particleContainer');
+            container.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'aroma-particle';
+                particle.style.left = (20 + i * 15) + 'px';
+                particle.style.bottom = '10px';
+                particle.style.width = '12px';
+                particle.style.height = '12px';
+                particle.style.borderRadius = '50%';
+                particle.style.backgroundColor = color;
+                particle.style.animationDelay = (i * 0.3) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // SIM 5: KULIT
+        function testSkin(icon, title, texture, temp, pitch) {
+            playSound('tone', pitch, 0.15);
+            document.getElementById('skinResultIcon').innerText = icon;
+            document.getElementById('skinResultTitle').innerText = title;
+            document.getElementById('skinTextureTag').innerText = "Tekstur: " + texture;
+            document.getElementById('skinTempTag').innerText = "Suhu: " + temp;
+
+            // Hand animation
+            const hand = document.getElementById('touchHand');
+            hand.style.transform = "scale(1.2)";
+            setTimeout(() => hand.style.transform = "scale(1)", 200);
+        }
+
+        /* --------------------------------------------------
+         * TAB 4: LKPD & EVALUASI KUIS
+         * -------------------------------------------------- */
+        const quizData = [
+            {
+                q: "Bagian lidah manakah yang paling peka untuk merasakan rasa manis seperti gula?",
+                options: ["Pangkal Lidah", "Ujung Lidah", "Tepi Belakang", "Samping Lidah"],
+                ans: 1
+            },
+            {
+                q: "Apa yang terjadi pada pupil mata saat kita berada di tempat yang sangat terang?",
+                options: ["Pupil Membesar", "Pupil Mengecil", "Pupil Berubah Warna", "Pupil Dipejamkan"],
+                ans: 1
+            },
+            {
+                q: "Indra yang digunakan untuk membedakan tekstur halus dan kasar adalah...",
+                options: ["Hidung", "Telinga", "Kulit", "Lidah"],
+                ans: 2
+            },
+            {
+                q: "Bagaimanakah cara merawat kesehatan telinga yang benar?",
+                options: ["Mendengarkan musik sangat keras", "Tusuk telinga dengan jarum", "Menjaga dari kebiasaan bising berlebih", "Menyiram air sabun ke dalam telinga"],
+                ans: 2
+            }
+        ];
+
+        let currentQIndex = 0;
+        let score = 0;
+        let selectedOption = null;
+
+        function loadQuestion() {
+            const q = quizData[currentQIndex];
+            document.getElementById('qNum').innerText = `Soal ${currentQIndex + 1} dari ${quizData.length}`;
+            document.getElementById('qText').innerText = q.q;
+
+            const optsContainer = document.getElementById('qOptions');
+            optsContainer.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "quiz-opt-btn bg-white hover:bg-sky-50 border-2 border-sky-200 text-sky-900 font-bold p-2.5 rounded-xl text-xs text-left transition flex items-center gap-2";
+                btn.innerHTML = `<span class="w-5 h-5 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-[10px]">${String.fromCharCode(65 + idx)}</span> ${opt}`;
+                btn.onclick = () => selectQuizOption(idx, btn);
+                optsContainer.appendChild(btn);
+            });
+
+            document.getElementById('btnNextQuiz').classList.add('hidden');
+            document.getElementById('quizFeedback').innerText = "Pilih salah satu jawaban!";
+            document.getElementById('quizFeedback').className = "text-xs font-bold text-slate-500";
+        }
+
+        function selectQuizOption(index, btnEl) {
+            playSound('click');
+            const q = quizData[currentQIndex];
+            const allBtns = document.querySelectorAll('.quiz-opt-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            if (index === q.ans) {
+                playSound('correct');
+                btnEl.className = "quiz-opt-btn bg-emerald-500 text-white border-2 border-emerald-600 font-bold p-2.5 rounded-xl text-xs text-left transition flex items-center gap-2";
+                score += 25;
+                document.getElementById('quizFeedback').innerText = "✨ Jawabanmu Benar!";
+                document.getElementById('quizFeedback').className = "text-xs font-bold text-emerald-600";
+            } else {
+                playSound('wrong');
+                btnEl.className = "quiz-opt-btn bg-rose-500 text-white border-2 border-rose-600 font-bold p-2.5 rounded-xl text-xs text-left transition flex items-center gap-2";
+                allBtns[q.ans].className = "quiz-opt-btn bg-emerald-500 text-white border-2 border-emerald-600 font-bold p-2.5 rounded-xl text-xs text-left transition flex items-center gap-2";
+                document.getElementById('quizFeedback').innerText = "❌ Jawaban Kurang Tepat.";
+                document.getElementById('quizFeedback').className = "text-xs font-bold text-rose-600";
+            }
+
+            document.getElementById('quizScoreBadge').innerText = `Skor: ${score} / 100`;
+            document.getElementById('btnNextQuiz').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            playSound('click');
+            currentQIndex++;
+            if (currentQIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showQuizResult();
+            }
+        }
+
+        function showQuizResult() {
+            playSound('correct');
+            document.getElementById('quizBox').classList.add('hidden');
+            document.getElementById('quizResultBox').classList.remove('hidden');
+            document.getElementById('quizFinalScoreText').innerText = `Skor Akhir Kamu: ${score} dari 100`;
+            document.getElementById('btnNextQuiz').classList.add('hidden');
+        }
+
+        function resetQuiz() {
+            playSound('click');
+            currentQIndex = 0;
+            score = 0;
+            document.getElementById('quizScoreBadge').innerText = "Skor: 0 / 100";
+            document.getElementById('quizBox').classList.remove('hidden');
+            document.getElementById('quizResultBox').classList.add('hidden');
+            loadQuestion();
+        }
+
+        // Initialize quiz on start
+        loadQuestion();
+
+        /* --------------------------------------------------
+         * FULLSCREEN TOGGLE
+         * -------------------------------------------------- */
+        function toggleFullscreen() {
+            playSound('click');
+            const elem = document.documentElement;
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) elem.requestFullscreen();
+                else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+    </script>
+</body>
+</html>
